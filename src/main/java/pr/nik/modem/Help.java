@@ -6,5 +6,5 @@ public class Help {
       "\t2. xxx_cmd.txt\t- contains list of commands.\n" +
       "where xxx - any text.\n\n\n" +
       "Run: java -jar [path]/modem.jar [path]/xxx.txt [THREADS_COUNT(default = 1)] [SOCKET_TIMEOUT(default = 30 sec)]\n" +
-      "===================================================================================================================\n";
+      "================================================================================\n";
 }
