@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class SimpleSocket implements Runnable {
   private static CommonFileSingleton cf;
@@ -20,7 +21,7 @@ public class SimpleSocket implements Runnable {
   private int port;
   private int socketTimeout;
   private List<String> listCommands;
-  
+
   public SimpleSocket(String ipAddress, int port, int timeout, String logFile, String successFile, String errorFile) {
     this.logFile = logFile;
     this.errorFile = errorFile;
@@ -31,7 +32,7 @@ public class SimpleSocket implements Runnable {
     
     cf = CommonFileSingleton.getInstance();
   }
-  
+
   public boolean init() {
     if (socket == null || socket.isClosed() || !socket.isConnected()) {
       try {
@@ -61,7 +62,7 @@ public class SimpleSocket implements Runnable {
     }
     return true;
   }
-  
+
   public void close() {
     if (socket != null) {
       try {
@@ -73,11 +74,11 @@ public class SimpleSocket implements Runnable {
         cf.writeToFile(logFile, e.getMessage());
       }
     }
-    
+
     if (out != null) {
       out.close();
     }
-    
+
     if (in != null) {
       try {
         in.close();
@@ -86,7 +87,7 @@ public class SimpleSocket implements Runnable {
       }
     }
   }
-  
+
   public boolean waitForConnect(long timeout) {
     if (timeout == 0) {
       timeout = 60_000;
@@ -109,7 +110,7 @@ public class SimpleSocket implements Runnable {
 
     if (timeout == 0) {
       if (!waitForConnect(socketTimeout * 3)) {
-        return result;
+        return CommandResult.NOT_CONNECT;
       }
     }
 
@@ -124,14 +125,10 @@ public class SimpleSocket implements Runnable {
       }
       response = respBuilder.toString();
       cf.writeToFile(logFile, response);
-      if (params.containsKey("contains")) {
-        if (response.toLowerCase().contains(params.get("contains").toString())) {
-          result = CommandResult.SUCCESS;
-        }
-      }
     } catch (IOException e) {
       cf.writeToFile(logFile, e.getMessage());
     }
+
     if (params.containsKey("reconnect")) {
       close();
       result = CommandResult.SUCCESS;
@@ -140,11 +137,17 @@ public class SimpleSocket implements Runnable {
     if (params.containsKey("wait")) {
       close();
       try {
-        Thread.sleep(Long.parseLong(params.get("wait").toString()) * 1000);
+        TimeUnit.SECONDS.sleep(Long.parseLong(params.get("wait").toString()));
       } catch (InterruptedException e) {
         cf.writeToFile(logFile, e.getMessage());
       }
       result = CommandResult.SUCCESS;
+    }
+
+    if (params.containsKey("contains")) {
+      if (response.toLowerCase().contains(params.get("contains").toString())) {
+        result = CommandResult.SUCCESS;
+      }
     }
 
     if (result == CommandResult.ERROR && params.containsKey("timeout")) {
@@ -158,13 +161,13 @@ public class SimpleSocket implements Runnable {
         isSuccess = response.toLowerCase().contains(condition.trim());
       }
       if (isSuccess) {
-        return CommandResult.SUCCESS_AND_BREAK;
+        result = CommandResult.SUCCESS_AND_BREAK;
       }
     }
 
     return result;
   }
-  
+
   public void setCommandsList(List<String> list) {
     this.listCommands = list;
   }
@@ -177,9 +180,9 @@ public class SimpleSocket implements Runnable {
       String cmd = cmdString.split("\\|")[0];
       Map<String, String> params = cf.getCmdParameters(cmdString);
       CommandResult response = executeCommand(cmd, params);
-      success = response != CommandResult.ERROR;
+      success = response == CommandResult.SUCCESS || response == CommandResult.SUCCESS_AND_BREAK;
 
-      if (response != CommandResult.SUCCESS) {
+      if (response == CommandResult.SUCCESS_AND_BREAK || response == CommandResult.NOT_CONNECT) {
         break;
       }
     }

@@ -43,7 +43,7 @@ public class CommonFileSingleton {
       }
       filePath = dirLogsPath + File.separator + name + ".txt";
     } else {
-      filePath = fileName.substring(0, fileName.indexOf(".")) + "_" + name + ".txt";
+      filePath = fileName.substring(0, fileName.lastIndexOf(".")) + "_" + name + ".txt";
     }
 
     File f = new File(filePath);
