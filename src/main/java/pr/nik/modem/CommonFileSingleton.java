@@ -16,9 +16,23 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CommonFile {
-  
-  public String createNewFile(String fileName, String name) {
+public class CommonFileSingleton {
+  private static volatile CommonFileSingleton instance;
+
+  private CommonFileSingleton() {}
+
+  public static CommonFileSingleton getInstance()
+  {
+    if (instance == null)
+    {
+      synchronized(CommonFileSingleton.class) {
+        if (instance == null) instance = new CommonFileSingleton();
+      }
+    }
+    return instance;
+  }
+
+  public synchronized String createNewFile(String fileName, String name) {
     String filePath = "";
     if (name.startsWith("log")) {
       String parrent = new File(fileName).getParent();
@@ -44,7 +58,7 @@ public class CommonFile {
     return filePath;
   }
   
-  public List<String> getFileToListOfLines(String fileName) {
+  public synchronized List<String> getFileToListOfLines(String fileName) {
     try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
       return stream.collect(Collectors.toList());
     } catch (IOException e) {
@@ -52,10 +66,12 @@ public class CommonFile {
       return null;
     }
   }
-  
+
   public synchronized void writeToFile(String fileName, String log) {
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
-    log = df.format(new Date(System.currentTimeMillis())) + ": " + log;
+    if (!fileName.toLowerCase().contains("error")) {
+      log = df.format(new Date(System.currentTimeMillis())) + ": " + log;
+    }
     System.out.println(log);
     try(FileWriter fw = new FileWriter(fileName, true);
         BufferedWriter bw = new BufferedWriter(fw);
@@ -66,8 +82,8 @@ public class CommonFile {
         System.err.println(e.getMessage());
     }
   }
-  
-  public Map<String, String> getCmdParameters(String cmdString) {
+
+  public synchronized Map<String, String> getCmdParameters(String cmdString) {
     Map<String, String> params = new HashMap<>();
     params = new HashMap<>();
     if (cmdString.split("\\|").length > 1) {
