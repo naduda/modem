@@ -1,0 +1,9 @@
+{
+	"cycles":1,
+	"ipFiles":[
+		"../../../1/test.txt",
+		"../../../2/test.txt"
+	],
+	"socketTimeout":10000,
+	"threadCount":1
+}

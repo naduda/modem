@@ -67,9 +67,19 @@ public class CommonFileSingleton {
     }
   }
 
+  public synchronized String getFileText(String fileName) {
+    StringBuffer sb = new StringBuffer();
+    try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
+      stream.forEach(sb::append);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return sb.toString();
+  }
+
   public synchronized void writeToFile(String fileName, String log) {
     DateFormat df = new SimpleDateFormat("HH:mm:ss.SSS");
-    if (!fileName.toLowerCase().contains("error")) {
+    if (!(fileName.toLowerCase().contains("error") || fileName.toLowerCase().contains("cfg.json"))) {
       log = df.format(new Date(System.currentTimeMillis())) + ": " + log;
     }
     System.out.println(log);
@@ -96,5 +106,21 @@ public class CommonFileSingleton {
       }
     }
     return params;
+  }
+  
+  public void cleanFolder(String path) throws Exception {
+    try {
+      File folder = new File(path);
+      if (!folder.exists()) {
+        return;
+      }
+      String[] entries = folder.list();
+      for(String s: entries){
+          File currentFile = new File(folder.getPath(), s);
+          currentFile.delete();
+      }
+    } catch (Exception e) {
+      throw e;
+    }
   }
 }

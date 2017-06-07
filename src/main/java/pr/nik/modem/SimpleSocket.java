@@ -14,6 +14,8 @@ public class SimpleSocket implements Runnable {
   private Socket socket;
   private PrintWriter out;
   private BufferedReader in;
+  private String fileName;
+  private String logFileName;
   private String logFile;
   private String successFile;
   private String errorFile;
@@ -22,8 +24,7 @@ public class SimpleSocket implements Runnable {
   private int socketTimeout;
   private List<String> listCommands;
 
-  public SimpleSocket(String ipAddress, int port, int timeout, String logFile, String successFile, String errorFile) {
-    this.logFile = logFile;
+  public SimpleSocket(String ipAddress, int port, int timeout, String successFile, String errorFile) {
     this.errorFile = errorFile;
     this.successFile = successFile;
     this.ipAddress = ipAddress;
@@ -171,9 +172,15 @@ public class SimpleSocket implements Runnable {
   public void setCommandsList(List<String> list) {
     this.listCommands = list;
   }
+  
+  public void setFileNames(String fileName, String logFileName) {
+    this.fileName = fileName;
+    this.logFileName = logFileName;
+  }
 
   @Override
   public void run() {
+    logFile = cf.createNewFile(fileName, logFileName);
     boolean success = true;
     for (int i = 0; i < listCommands.size(); i++) {
       String cmdString = listCommands.get(i);
