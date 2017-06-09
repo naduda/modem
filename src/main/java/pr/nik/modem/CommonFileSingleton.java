@@ -71,9 +71,7 @@ public class CommonFileSingleton {
     StringBuffer sb = new StringBuffer();
     try (Stream<String> stream = Files.lines(Paths.get(fileName))) {
       stream.forEach(sb::append);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    } catch (IOException e) {}
     return sb.toString();
   }
 

@@ -1,7 +1,5 @@
 package pr.nik.modem;
 
-import com.alibaba.fastjson.JSON;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -25,21 +23,14 @@ public class Main {
   public static void main(String[] args) {
     cf = CommonFileSingleton.getInstance();
 
-    if (args.length < 1) {
-      String textFile = cf.getFileText("cfg.json");
-      if (textFile.length() < 1) {
-        return;
-      }
-      cfg = JSON.parseObject(textFile, Configuration.class);
-    } else {
-      if (args[0].toLowerCase().equals("make")) {
-        cfg = new Configuration();
-        make();
-      } else if (args[0].toLowerCase().equals("help")) {
-        System.out.println(Help.TEXT);
-      }
+    String textFile = cf.getFileText("cfg.json");
+    if (textFile.length() < 1) {
+      cfg = new Configuration();
+      make();
       return;
     }
+    cfg = new Configuration();
+    cfg.parseObject(textFile);
 
     for(int i = 0; i < cfg.getIpFiles().size(); i++) {
       String fileName = cfg.getIpFiles().get(i);
@@ -121,7 +112,7 @@ public class Main {
       e.printStackTrace();
     }
 
-    String jsonString = JSON.toJSONString(cfg, true);
+    String jsonString = cfg.toJSONString();
     File f = new File("./cfg.json");
     if (f.exists()) {
       f.delete();
